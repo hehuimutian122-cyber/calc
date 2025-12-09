@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計算履歴 - AuthApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #3498db;
+        }
+        
+        main {
+            min-height: calc(100vh - 140px);
+            padding: 2rem 0;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .card h1 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .history-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .history-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .history-table .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .button-group {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .button-group a {
+            margin: 0 0.5rem;
+        }
+        
+        /* ページネーション用のスタイル追加 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+        
+        .pagination a,
+        .pagination span {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            background-color: white;
+            transition: all 0.3s;
+        }
+        
+        .pagination a:hover {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .pagination .current {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+            font-weight: bold;
+        }
+        
+        .pagination .disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background-color: #f5f5f5;
+        }
+        
+        .pagination .disabled:hover {
+            background-color: #f5f5f5;
+            color: #ccc;
+            border-color: #ddd;
+        }
+        
+        .pagination-info {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">AuthApp</div>
+            <ul class="nav-links">
+                <li><a th:href="@{/}">ホーム</a></li>
+                <li><a th:href="@{/living-cost/calculate}">生活費計算</a></li>
+                <li sec:authorize="isAuthenticated()">
+                    <a th:href="@{/living-cost/history}">計算履歴</a>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}">ログイン</a>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/register}">ユーザー登録</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <span>ようこそ、<span sec:authentication="name"></span>さん</span>
+                </li>
+                <li sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/users}">ユーザー一覧</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">ログアウト</button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <div class="card">
+            <h1>計算履歴</h1>
+        
+            <!-- 検索結果が空の場合 -->
+            <div th:if="${historyPage == null || historyPage.isEmpty()}" class="empty-message">
+                <p>計算履歴がありません。</p>
+                <p style="margin-top: 1rem;">
+                    <a th:href="@{/living-cost/calculate}" class="btn">新規計算</a>
+                </p>
+            </div>
+        
+            <!-- 検索結果がある場合 -->
+            <div th:if="${historyPage != null && !historyPage.isEmpty()}">
+                <!-- ページネーション情報の表示 -->
+                <div class="pagination-info">
+                    <span th:text="'全 ' + ${historyPage.totalElements} + ' 件中 ' + 
+                                  (${historyPage.number} * ${historyPage.size} + 1) + ' - ' + 
+                                  (${historyPage.number} * ${historyPage.size} + ${historyPage.numberOfElements}) + ' 件を表示'">
+                        全 100 件中 1 - 10 件を表示
+                    </span>
+                </div>
+                
+                <!-- 履歴テーブル -->
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>計算日時</th>
+                            <th>郵便番号</th>
+                            <th>都道府県</th>
+                            <th>年収</th>
+                            <th class="amount">月額合計</th>
+                            <th class="amount">年額合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="history : ${historyPage.content}">
+                            <td th:text="${#temporals.format(history.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
+                            <td th:text="${history.postalCode}">1000001</td>
+                            <td th:text="${history.prefectureName}">東京都</td>
+                            <td class="currency" th:text="${#numbers.formatInteger(history.annualIncome, 0, 'COMMA')} + '円'">5,000,000円</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(history.monthlyTotal, 0, 'COMMA')} + '円'">110,000円</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(history.annualTotal, 0, 'COMMA')} + '円'">1,320,000円</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- ページネーションUI -->
+                <div class="pagination" th:if="${historyPage.totalPages > 1}">
+                    <!-- 前へボタン -->
+                    <a th:if="${historyPage.hasPrevious()}" 
+                       th:href="@{/living-cost/history(page=${historyPage.number - 1}, size=${historyPage.size})}"
+                       class="btn-prev">
+                        前へ
+                    </a>
+                    <span th:unless="${historyPage.hasPrevious()}" class="disabled">前へ</span>
+                    
+                    <!-- ページ番号の表示 -->
+                    <span th:each="pageNum : ${#numbers.sequence(0, historyPage.totalPages - 1)}">
+                        <!-- 現在のページから前後2ページ分を表示 -->
+                        <span th:if="${pageNum >= historyPage.number - 2 && pageNum <= historyPage.number + 2}">
+                            <a th:if="${pageNum != historyPage.number}"
+                               th:href="@{/living-cost/history(page=${pageNum}, size=${historyPage.size})}"
+                               th:text="${pageNum + 1}">
+                                1
+                            </a>
+                            <span th:unless="${pageNum != historyPage.number}" 
+                                  class="current"
+                                  th:text="${pageNum + 1}">
+                                1
+                            </span>
+                        </span>
+                        <!-- 省略記号の表示 -->
+                        <span th:if="${pageNum == historyPage.number - 3 && historyPage.number > 3}">
+                            <span>...</span>
+                        </span>
+                        <span th:if="${pageNum == historyPage.number + 3 && historyPage.number < historyPage.totalPages - 4}">
+                            <span>...</span>
+                        </span>
+                    </span>
+                    
+                    <!-- 次へボタン -->
+                    <a th:if="${historyPage.hasNext()}" 
+                       th:href="@{/living-cost/history(page=${historyPage.number + 1}, size=${historyPage.size})}"
+                       class="btn-next">
+                        次へ
+                    </a>
+                    <span th:unless="${historyPage.hasNext()}" class="disabled">次へ</span>
+                </div>
+            </div>
+        
+            <div class="button-group" th:if="${historyPage != null && !historyPage.isEmpty()}">
+                <a th:href="@{/living-cost/calculate}" class="btn">新規計算</a>
+                <a th:href="@{/}" class="btn btn-secondary">ホームに戻る</a>
+            </div>
+        </div>
+    </main>
+  
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 AuthApp. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エラー - 外部API接続エラー</title>
+    <th:block th:insert="~{fragments :: common-styles}"></th:block>
+    <th:block th:insert="~{fragments :: error-styles}"></th:block>
+</head>
+<body>
+    <div th:insert="~{fragments :: header}"></div>
+    
+    <main class="container">
+        <div class="card">
+            <div class="error-icon">⚠️</div>
+            <h1 class="error-title">外部サービス接続エラー</h1>
+            <div class="error-message warning" th:text="${errorMessage}">
+                外部サービスへの接続に失敗しました。しばらく時間をおいて再度お試しください。
+            </div>
+            <div>
+                <a th:href="@{/living-cost/calculate}" class="btn">計算画面に戻る</a>
+                <a th:href="@{/}" class="btn btn-secondary">ホームに戻る</a>
+            </div>
+        </div>
+    </main>
+    
+    <div th:insert="~{fragments :: footer}"></div>
+</body>
+</html>

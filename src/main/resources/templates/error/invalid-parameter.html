@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エラー - パラメータが不正です</title>
+    <th:block th:insert="~{fragments :: common-styles}"></th:block>
+    <th:block th:insert="~{fragments :: error-styles}"></th:block>
+</head>
+<body>
+    <div th:insert="~{fragments :: header}"></div>
+    
+    <main class="container">
+        <div class="card">
+            <div class="error-icon">⚠️</div>
+            <h1 class="error-title">パラメータが不正です</h1>
+            <div class="error-message" th:text="${errorMessage}">
+                入力されたパラメータが不正です。
+            </div>
+            <div>
+                <a href="javascript:history.back()" class="btn">前のページに戻る</a>
+                <a th:href="@{/}" class="btn btn-secondary">ホームに戻る</a>
+            </div>
+        </div>
+    </main>
+    
+    <div th:insert="~{fragments :: footer}"></div>
+</body>
+</html>

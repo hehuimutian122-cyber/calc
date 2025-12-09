@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生活費計算結果 - AuthApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #3498db;
+        }
+        
+        main {
+            min-height: calc(100vh - 140px);
+            padding: 2rem 0;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .card h1 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+        }
+        
+        .info-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .calculation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .calculation-table th,
+        .calculation-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .calculation-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .calculation-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .calculation-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .total-row {
+            background-color: #e8f4f8 !important;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .total-row td {
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .button-group {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .button-group a {
+            margin: 0 0.5rem;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+        
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">AuthApp</div>
+            <ul class="nav-links">
+                <li><a th:href="@{/}">ホーム</a></li>
+                <li><a th:href="@{/living-cost/calculate}">生活費計算</a></li>
+                <li sec:authorize="isAuthenticated()">
+                    <a th:href="@{/living-cost/history}">計算履歴</a>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}">ログイン</a>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/register}">ユーザー登録</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <span>ようこそ、<span sec:authentication="name"></span>さん</span>
+                </li>
+                <li sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/users}">ユーザー一覧</a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">ログアウト</button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <div class="card">
+            <h1>生活費計算結果</h1>
+            
+            <div class="info-section" th:if="${calculation}">
+                <h2>入力情報</h2>
+                <div class="info-row">
+                    <span class="info-label">郵便番号</span>
+                    <span class="info-value" th:text="${calculation.postalCode}">1234567</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">都道府県</span>
+                    <span class="info-value" th:text="${calculation.prefecture}">東京都</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">年収</span>
+                    <span class="info-value currency" th:text="${#numbers.formatInteger(calculation.annualIncome, 0, 'COMMA')} + '円'">5,000,000円</span>
+                </div>
+            </div>
+            
+            <div th:if="${calculation}">
+                <h2 style="margin-top: 2rem; margin-bottom: 1rem; color: #2c3e50;">月額生活費の内訳</h2>
+                <table class="calculation-table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th class="amount">金額（円）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>家賃</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyRent, 0, 'COMMA')} + '円'">50,000円</td>
+                        </tr>
+                        <tr>
+                            <td>光熱費</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyUtilities, 0, 'COMMA')} + '円'">10,000円</td>
+                        </tr>
+                        <tr>
+                            <td>食費</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyFood, 0, 'COMMA')} + '円'">30,000円</td>
+                        </tr>
+                        <tr>
+                            <td>通信費</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyCommunication, 0, 'COMMA')} + '円'">5,000円</td>
+                        </tr>
+                        <tr>
+                            <td>その他</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyOthers, 0, 'COMMA')} + '円'">15,000円</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>月額合計</td>
+                            <td class="amount currency" th:text="${#numbers.formatInteger(calculation.monthlyTotal, 0, 'COMMA')} + '円'">110,000円</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 2rem; padding: 1.5rem; background-color: #e8f4f8; border-radius: 5px;">
+                    <div class="info-row">
+                        <span class="info-label" style="font-size: 1.1rem;">年間合計</span>
+                        <span class="info-value currency" style="font-size: 1.2rem; color: #2c3e50;" th:text="${#numbers.formatInteger(calculation.annualTotal, 0, 'COMMA')} + '円'">1,320,000円</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <a th:href="@{/living-cost/calculate}" class="btn">再計算する</a>
+                <a sec:authorize="isAuthenticated()" th:href="@{/living-cost/history}" class="btn">計算履歴を見る</a>
+                <a th:href="@{/}" class="btn btn-secondary">ホームに戻る</a>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 AuthApp. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+
