@@ -231,6 +231,10 @@
                 
                 <button type="submit" class="btn">計算する</button>
             </form>
+            
+            <div sec:authorize="isAuthenticated()" style="margin-top: 1.5rem; text-align: center;">
+                <a th:href="@{/living-cost/history}" class="btn btn-secondary">計算履歴を見る</a>
+            </div>
         </div>
     </main>
     

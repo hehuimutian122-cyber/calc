@@ -337,6 +337,7 @@
         
             <div class="button-group" th:if="${historyPage != null && !historyPage.isEmpty()}">
                 <a th:href="@{/living-cost/calculate}" class="btn">新規計算</a>
+                <a th:href="@{/living-cost/export}" class="btn" style="background-color: #27ae60;">エクセル出力</a>
                 <a th:href="@{/}" class="btn btn-secondary">ホームに戻る</a>
             </div>
         </div>

@@ -2,17 +2,24 @@ package com.example.authapp.controller;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +31,9 @@ import com.example.authapp.dto.LivingCostRequest;
 import com.example.authapp.entity.CalculationHistory;
 import com.example.authapp.entity.User;
 import com.example.authapp.repository.CalculationHistoryKensakuRepository;
+import com.example.authapp.service.ExcelExportService;
 import com.example.authapp.service.LivingCostService;
 import com.example.authapp.service.UserService;
-
-import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/living-cost") //RequestMappingはコントローラークラス全体に共通のURLを設定する
@@ -43,6 +49,9 @@ public class LivingCostController {
 	
 	@Autowired
     private CalculationHistoryKensakuRepository calculationHistoryRepository;
+	
+	@Autowired
+    private ExcelExportService excelExportService;
 	
 	// 入力画面を表示
     @GetMapping("/calculate")
@@ -136,5 +145,62 @@ public class LivingCostController {
         
         return "living-cost/history";
     }
+    
+    //エクセル出力
+    @GetMapping("/export")
+    public ResponseEntity<Resource> exportXlsx(Authentication authentication) {
+    	logger.info("エクセル出力リクエスト受信");
+    	
+    	// 認証チェック
+    	if (authentication == null || !authentication.isAuthenticated()) {
+    		logger.warn("未認証ユーザーがエクセル出力にアクセス - ログイン画面にリダイレクト");
+    		return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+    	}
+    	
+    	String username = authentication.getName();
+    	logger.debug("エクセル出力開始 - username: {}", username);
+    	
+    	User user = userService.findByUsername(username);
+    	
+    	// 最新の計算履歴を取得（1件のみ）
+    	List<CalculationHistory> histories = 
+    		calculationHistoryRepository.searchByConditions(user, null, null, null, 0, 1);
+    	
+    	if (histories.isEmpty()) {
+    		logger.warn("計算履歴が見つかりません - username: {}", username);
+    		return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).build();
+    	}
+    	
+    	CalculationHistory latestHistory = histories.get(0);
+    	
+    	// CalculationHistoryをLivingCostCalculationに変換
+    	LivingCostCalculation calculation = new LivingCostCalculation(
+    		latestHistory.getPostalCode(),
+    		latestHistory.getPrefectureName(),
+    		latestHistory.getAnnualIncome(),
+    		latestHistory.getMonthlyRent() != null ? latestHistory.getMonthlyRent() : 0,
+    		latestHistory.getMonthlyUtilities() != null ? latestHistory.getMonthlyUtilities() : 0,
+    		latestHistory.getMonthlyFood() != null ? latestHistory.getMonthlyFood() : 0,
+    		latestHistory.getMonthlyCommunication() != null ? latestHistory.getMonthlyCommunication() : 0,
+    		latestHistory.getMonthlyOthers() != null ? latestHistory.getMonthlyOthers() : 0
+    	);
+    	
+    	// エクセルファイルを生成
+    	byte[] excelBytes = excelExportService.export(calculation);
+    	String fileName = excelExportService.generateFileName();
+    	
+    	// レスポンスヘッダーを設定
+    	HttpHeaders headers = new HttpHeaders();
+    	headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    	headers.setContentDispositionFormData("attachment", fileName);
+    	headers.setContentLength(excelBytes.length);
+    	
+    	logger.info("エクセルファイルの出力が完了しました - filename: {}", fileName);
+    	
+    	return ResponseEntity.ok()
+    		.headers(headers)
+    		.body(new ByteArrayResource(excelBytes));
+    }
+    
 
 }

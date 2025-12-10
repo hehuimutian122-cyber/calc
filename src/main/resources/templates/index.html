@@ -155,6 +155,11 @@
                         <p style="margin-bottom: 0.5rem; color: #666;">郵便番号と年収を入力して、地域別の生活費を計算できます。</p>
                         <a th:href="@{/living-cost/calculate}" class="btn">生活費計算を始める</a>
                     </div>
+                    <div sec:authorize="isAuthenticated()" style="margin-bottom: 1.5rem; padding: 1rem; background-color: #f8f9fa; border-radius: 5px;">
+                        <h3 style="margin-bottom: 0.5rem; color: #2c3e50;">計算履歴</h3>
+                        <p style="margin-bottom: 0.5rem; color: #666;">過去に計算した生活費の履歴を確認できます。</p>
+                        <a th:href="@{/living-cost/history}" class="btn">計算履歴を見る</a>
+                    </div>
                 </div>
             </div>
             
@@ -171,8 +176,12 @@
                 <h2>アカウント機能</h2>
                 <ul style="margin-top: 1rem; margin-left: 2rem;">
                     <li>プロフィール管理</li>
+                    <li>計算履歴の確認</li>
                     <li sec:authorize="hasRole('ADMIN')">ユーザー管理（管理者のみ）</li>
                 </ul>
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{/living-cost/history}" class="btn">計算履歴を見る</a>
+                </div>
             </div>
         </div>
     </main>
